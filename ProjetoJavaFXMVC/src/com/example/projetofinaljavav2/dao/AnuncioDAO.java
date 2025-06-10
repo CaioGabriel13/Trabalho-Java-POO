@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class AnuncioDAO implements GenericDAO<Anuncio> {
-    private static final String FILE_PATH = "/home/ubuntu/ProjetoJavaFXMVC/data/anuncios.dat";
+    private static final String FILE_PATH = "ProjetoJavaFXMVC/data/anuncios.dat";
 
     @Override
     public void create(Anuncio anuncio) {

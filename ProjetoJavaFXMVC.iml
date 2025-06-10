@@ -10,5 +10,6 @@
     <orderEntry type="library" name="openjfx.javafx.base" level="project" />
     <orderEntry type="library" name="andrewlalis.javafx.scene.router" level="project" />
     <orderEntry type="library" name="controlsfx" level="project" />
+    <orderEntry type="library" name="javafx-swt" level="project" />
   </component>
 </module>
