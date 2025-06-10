@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class PsicologoDAO implements GenericDAO<Psicologo> {
-    private static final String FILE_PATH = "/home/ubuntu/ProjetoJavaFXMVC/data/psicologos.dat";
+    private static final String FILE_PATH = "ProjetoJavaFXMVC/Data/psicologos.dat";
 
     @Override
     public void create(Psicologo psicologo) {

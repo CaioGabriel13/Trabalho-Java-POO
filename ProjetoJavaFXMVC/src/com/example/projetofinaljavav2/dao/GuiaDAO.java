@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class GuiaDAO implements GenericDAO<Guia> {
-    private static final String FILE_PATH = "/home/ubuntu/ProjetoJavaFXMVC/data/guias.dat";
+    private static final String FILE_PATH = "ProjetoJavaFXMVC/data/guias.dat";
 
     @Override
     public void create(Guia guia) {

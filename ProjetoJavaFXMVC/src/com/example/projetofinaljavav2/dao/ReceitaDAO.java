@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ReceitaDAO implements GenericDAO<Receita> {
-    private static final String FILE_PATH = "/home/ubuntu/ProjetoJavaFXMVC/data/receitas.dat";
+    private static final String FILE_PATH = "ProjetoJavaFXMVC/Data/receitas.dat";
 
     @Override
     public void create(Receita receita) {

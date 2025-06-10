@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class PacienteDAO implements GenericDAO<Paciente> {
-    private static final String FILE_PATH = "/home/ubuntu/ProjetoJavaFXMVC/data/pacientes.dat";
+    private static final String FILE_PATH = "ProjetoJavaFXMVC/Data/pacientes.dat";
 
     @Override
     public void create(Paciente paciente) {
