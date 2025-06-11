@@ -6,80 +6,125 @@ import com.example.projetofinaljavav2.view.PsicologoView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.regex.Pattern;
+
 public class PsicologoController {
-    private PsicologoView view;
-    private PsicologoDAO dao;
-    private ObservableList<Psicologo> psicologoList;
+    private final PsicologoView view;
+    private final PsicologoDAO dao;
+    private final ObservableList<Psicologo> psicologoList;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     public PsicologoController(PsicologoView view) {
         this.view = view;
         this.dao = new PsicologoDAO();
         this.psicologoList = FXCollections.observableArrayList();
 
-        // Carregar dados iniciais
+        configureSelection();
+        configureActions();
         loadPsicologos();
+    }
 
-        // Configurar listeners dos botões
-        this.view.getAddButton().setOnAction(e -> addPsicologo());
-        this.view.getUpdateButton().setOnAction(e -> updatePsicologo());
-        this.view.getDeleteButton().setOnAction(e -> deletePsicologo());
-        this.view.getClearButton().setOnAction(e -> view.clearFields());
+    private void configureSelection() {
+        view.getPsicologoTable().getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldSel, newSel) -> {
+                    if (newSel != null) {
+                        view.getIdField().setText(String.valueOf(newSel.getId()));
+                        view.getNomeField().setText(newSel.getNome());
+                        view.getCrpField().setText(newSel.getCrp());
+                        view.getEspecialidadeField().setText(newSel.getEspecialidade());
+                        view.getTelefoneField().setText(newSel.getTelefone());
+                        view.getEmailField().setText(newSel.getEmail());
+                    }
+                });
+    }
+
+    private void configureActions() {
+        view.getAddButton().setOnAction(e -> addPsicologo());
+        view.getUpdateButton().setOnAction(e -> updatePsicologo());
+        view.getDeleteButton().setOnAction(e -> deletePsicologo());
+        view.getClearButton().setOnAction(e -> view.clearFields());
     }
 
     private void loadPsicologos() {
-        psicologoList.clear();
-        psicologoList.addAll(dao.readAll());
+        List<Psicologo> list = dao.readAll();
+        psicologoList.setAll(list);
         view.getPsicologoTable().setItems(psicologoList);
     }
 
     private void addPsicologo() {
         try {
-            // Gerar um ID simples
-            int newId = psicologoList.isEmpty() ? 1 : psicologoList.stream().mapToInt(Psicologo::getId).max().getAsInt() + 1;
-            String nome = view.getNomeField().getText();
-            String crp = view.getCrpField().getText();
-            String especialidade = view.getEspecialidadeField().getText();
-            String telefone = view.getTelefoneField().getText();
-            String email = view.getEmailField().getText();
+            String nome = view.getNomeField().getText().trim();
+            String crp = view.getCrpField().getText().trim();
+            String esp = view.getEspecialidadeField().getText().trim();
+            String tel = view.getTelefoneField().getText().trim();
+            String email = view.getEmailField().getText().trim();
 
-            if (nome.isEmpty() || crp.isEmpty() || especialidade.isEmpty() || telefone.isEmpty() || email.isEmpty()) {
-                view.showAlert("Erro", "Todos os campos devem ser preenchidos.");
+            if (nome.isEmpty()||crp.isEmpty()||esp.isEmpty()||tel.isEmpty()||email.isEmpty()) {
+                view.showAlert("Erro","Todos os campos devem ser preenchidos.");
+                return;
+            }
+            if (!isValidCRP(crp)) {
+                view.showAlert("Erro","CRP inválido. Insira pelo menos 5 dígitos.");
+                return;
+            }
+            if (!isValidPhone(tel)) {
+                view.showAlert("Erro","Telefone inválido. Deve ter 10 ou 11 dígitos.");
+                return;
+            }
+            if (!isValidEmail(email)) {
+                view.showAlert("Erro","Email inválido.");
                 return;
             }
 
-            Psicologo psicologo = new Psicologo(newId, nome, crp, especialidade, telefone, email);
-            dao.create(psicologo);
+            int newId = psicologoList.isEmpty() ? 1 : psicologoList.stream()
+                    .mapToInt(Psicologo::getId).max().getAsInt()+1;
+            Psicologo p = new Psicologo(newId,nome,crp,esp,tel,email);
+            dao.create(p);
             loadPsicologos();
             view.clearFields();
-            view.showAlert("Sucesso", "Psicólogo adicionado com sucesso!");
-        } catch (Exception e) {
-            view.showAlert("Erro", "Erro ao adicionar psicólogo: " + e.getMessage());
+            view.showAlert("Sucesso","Psicólogo adicionado com sucesso.");
+        } catch(Exception ex) {
+            view.showAlert("Erro","Falha ao adicionar: " + ex.getMessage());
         }
     }
 
     private void updatePsicologo() {
         try {
             int id = Integer.parseInt(view.getIdField().getText());
-            String nome = view.getNomeField().getText();
-            String crp = view.getCrpField().getText();
-            String especialidade = view.getEspecialidadeField().getText();
-            String telefone = view.getTelefoneField().getText();
-            String email = view.getEmailField().getText();
+            String nome = view.getNomeField().getText().trim();
+            String crp = view.getCrpField().getText().trim();
+            String esp = view.getEspecialidadeField().getText().trim();
+            String tel = view.getTelefoneField().getText().trim();
+            String email = view.getEmailField().getText().trim();
 
-            if (nome.isEmpty() || crp.isEmpty() || especialidade.isEmpty() || telefone.isEmpty() || email.isEmpty()) {
-                view.showAlert("Erro", "Todos os campos devem ser preenchidos.");
+            if (nome.isEmpty()||crp.isEmpty()||esp.isEmpty()||tel.isEmpty()||email.isEmpty()) {
+                view.showAlert("Erro","Todos os campos devem ser preenchidos.");
+                return;
+            }
+            if (!isValidCRP(crp)) {
+                view.showAlert("Erro","CRP inválido.");
+                return;
+            }
+            if (!isValidPhone(tel)) {
+                view.showAlert("Erro","Telefone inválido.");
+                return;
+            }
+            if (!isValidEmail(email)) {
+                view.showAlert("Erro","Email inválido.");
                 return;
             }
 
-            Psicologo psicologo = new Psicologo(id, nome, crp, especialidade, telefone, email);
-            dao.update(psicologo);
+            Psicologo p = new Psicologo(id,nome,crp,esp,tel,email);
+            dao.update(p);
             loadPsicologos();
             view.clearFields();
-            view.showAlert("Sucesso", "Psicólogo atualizado com sucesso!");
-        } catch (NumberFormatException e) {
-            view.showAlert("Erro", "ID inválido. Selecione um psicólogo da tabela.");
-        } catch (Exception e) {
-            view.showAlert("Erro", "Erro ao atualizar psicólogo: " + e.getMessage());
+            view.showAlert("Sucesso","Psicólogo atualizado.");
+        } catch(NumberFormatException ex) {
+            view.showAlert("Erro","Selecione um psicólogo válido.");
+        } catch(Exception ex) {
+            view.showAlert("Erro","Falha ao atualizar: " + ex.getMessage());
         }
     }
 
@@ -89,12 +134,25 @@ public class PsicologoController {
             dao.delete(id);
             loadPsicologos();
             view.clearFields();
-            view.showAlert("Sucesso", "Psicólogo excluído com sucesso!");
-        } catch (NumberFormatException e) {
-            view.showAlert("Erro", "ID inválido. Selecione um psicólogo da tabela para excluir.");
-        } catch (Exception e) {
-            view.showAlert("Erro", "Erro ao excluir psicólogo: " + e.getMessage());
+            view.showAlert("Sucesso","Psicólogo excluído.");
+        } catch(NumberFormatException ex) {
+            view.showAlert("Erro","Selecione um psicólogo.");
+        } catch(Exception ex) {
+            view.showAlert("Erro","Falha ao excluir: " + ex.getMessage());
         }
     }
-}
 
+    private boolean isValidCRP(String crp) {
+        String digits = crp.replaceAll("\\D","   ");
+        return digits.matches("\\d{5,}");
+    }
+
+    private boolean isValidPhone(String phone) {
+        String digits = phone.replaceAll("\\D","   ");
+        return digits.matches("\\d{10,11}");
+    }
+
+    private boolean isValidEmail(String email) {
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+}

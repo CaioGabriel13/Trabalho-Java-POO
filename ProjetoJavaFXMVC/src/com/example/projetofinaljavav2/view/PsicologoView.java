@@ -5,13 +5,15 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 public class PsicologoView extends Stage {
 
+    private TableView<Psicologo> psicologoTable;
     private TextField idField;
     private TextField nomeField;
     private TextField crpField;
@@ -22,150 +24,128 @@ public class PsicologoView extends Stage {
     private Button updateButton;
     private Button deleteButton;
     private Button clearButton;
-    private TableView<Psicologo> psicologoTable;
 
     public PsicologoView() {
-        setTitle("Gerenciar Psicólogos");
+        setTitle("Gerenciador de Psicólogos");
 
-        GridPane formPane = new GridPane();
-        formPane.setPadding(new Insets(10));
-        formPane.setHgap(10);
-        formPane.setVgap(10);
+        // --- Tabela de psicólogos (ID, Nome, Especialidade) ---
+        psicologoTable = new TableView<>();
+        psicologoTable.setPrefWidth(350);
+        psicologoTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        idField = new TextField();
-        idField.setPromptText("ID (para busca/edição/exclusão)");
-        idField.setDisable(true); // ID será gerado automaticamente ou preenchido na seleção
+        TableColumn<Psicologo, Integer> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        nomeField = new TextField();
-        nomeField.setPromptText("Nome");
+        TableColumn<Psicologo, String> nomeCol = new TableColumn<>("Nome");
+        nomeCol.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        crpField = new TextField();
-        crpField.setPromptText("CRP");
+        TableColumn<Psicologo, String> espCol = new TableColumn<>("Especialidade");
+        espCol.setCellValueFactory(new PropertyValueFactory<>("especialidade"));
 
-        especialidadeField = new TextField();
-        especialidadeField.setPromptText("Especialidade");
+        psicologoTable.getColumns().addAll(idCol, nomeCol, espCol);
 
-        telefoneField = new TextField();
-        telefoneField.setPromptText("Telefone");
+        // Evento duplo-clique para exibir detalhes completos
+        psicologoTable.setRowFactory(tv -> {
+            TableRow<Psicologo> row = new TableRow<>();
+            row.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && !row.isEmpty()) {
+                    Psicologo p = row.getItem();
+                    Alert det = new Alert(Alert.AlertType.INFORMATION);
+                    det.setTitle("Detalhes do Psicólogo");
+                    det.setHeaderText(p.getNome());
+                    String content = String.format(
+                            "ID: %d\nNome: %s\nCRP: %s\nEspecialidade: %s\nTelefone: %s\nEmail: %s",
+                            p.getId(), p.getNome(), p.getCrp(), p.getEspecialidade(), p.getTelefone(), p.getEmail()
+                    );
+                    det.setContentText(content);
+                    det.showAndWait();
+                }
+            });
+            return row;
+        });
 
-        emailField = new TextField();
-        emailField.setPromptText("Email");
+        // --- Formulário de cadastro/edição ---
+        GridPane form = new GridPane();
+        form.setHgap(10);
+        form.setVgap(10);
+        form.setPadding(new Insets(10));
+        form.setBackground(new Background(new BackgroundFill(Color.WHITE, new CornerRadii(4), Insets.EMPTY)));
 
-        formPane.addRow(0, new Label("ID:"), idField);
-        formPane.addRow(1, new Label("Nome:"), nomeField);
-        formPane.addRow(2, new Label("CRP:"), crpField);
-        formPane.addRow(3, new Label("Especialidade:"), especialidadeField);
-        formPane.addRow(4, new Label("Telefone:"), telefoneField);
-        formPane.addRow(5, new Label("Email:"), emailField);
+        idField = new TextField(); idField.setPromptText("ID"); idField.setDisable(true); idField.setStyle(fieldStyle());
+        nomeField = new TextField(); nomeField.setPromptText("Nome"); nomeField.setStyle(fieldStyle());
+        crpField = new TextField(); crpField.setPromptText("CRP"); crpField.setStyle(fieldStyle());
+        especialidadeField = new TextField(); especialidadeField.setPromptText("Especialidade"); especialidadeField.setStyle(fieldStyle());
+        telefoneField = new TextField(); telefoneField.setPromptText("Telefone"); telefoneField.setStyle(fieldStyle());
+        emailField = new TextField(); emailField.setPromptText("Email"); emailField.setStyle(fieldStyle());
 
+        form.addRow(0, new Label("ID:"), idField);
+        form.addRow(1, new Label("Nome:"), nomeField);
+        form.addRow(2, new Label("CRP:"), crpField);
+        form.addRow(3, new Label("Especialidade:"), especialidadeField);
+        form.addRow(4, new Label("Telefone:"), telefoneField);
+        form.addRow(5, new Label("Email:"), emailField);
+
+        // --- Botões de ação ---
         addButton = new Button("Adicionar");
         updateButton = new Button("Atualizar");
         deleteButton = new Button("Excluir");
-        clearButton = new Button("Limpar Campos");
+        clearButton = new Button("Limpar");
+        styleButton(addButton, "#00695C"); // verde-escuro para psicólogos
+        styleButton(updateButton, "#00695C");
+        styleButton(deleteButton, "#D32F2F");
+        styleButton(clearButton, "#777777");
 
-        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton, clearButton);
-        buttonBox.setPadding(new Insets(10, 0, 10, 0));
+        HBox actions = new HBox(10, addButton, updateButton, deleteButton, clearButton);
+        actions.setPadding(new Insets(10));
+        actions.setBackground(new Background(new BackgroundFill(Color.web("#ECEFF1"), new CornerRadii(4), Insets.EMPTY)));
 
-        psicologoTable = new TableView<>();
-        TableColumn<Psicologo, Integer> idColumn = new TableColumn<>("ID");
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        // --- Layout principal ---
+        BorderPane root = new BorderPane();
+        root.setLeft(psicologoTable);
+        root.setCenter(form);
+        root.setBottom(actions);
+        root.setPadding(new Insets(12));
+        root.setBackground(new Background(new BackgroundFill(Color.web("#F0F4C3"), CornerRadii.EMPTY, Insets.EMPTY)));
+        // cor de fundo suave para psicólogos
 
-        TableColumn<Psicologo, String> nomeColumn = new TableColumn<>("Nome");
-        nomeColumn.setCellValueFactory(new PropertyValueFactory<>("nome"));
-
-        TableColumn<Psicologo, String> crpColumn = new TableColumn<>("CRP");
-        crpColumn.setCellValueFactory(new PropertyValueFactory<>("crp"));
-
-        TableColumn<Psicologo, String> especialidadeColumn = new TableColumn<>("Especialidade");
-        especialidadeColumn.setCellValueFactory(new PropertyValueFactory<>("especialidade"));
-
-        TableColumn<Psicologo, String> telefoneColumn = new TableColumn<>("Telefone");
-        telefoneColumn.setCellValueFactory(new PropertyValueFactory<>("telefone"));
-
-        TableColumn<Psicologo, String> emailColumn = new TableColumn<>("Email");
-        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
-
-        psicologoTable.getColumns().addAll(idColumn, nomeColumn, crpColumn, especialidadeColumn, telefoneColumn, emailColumn);
-
-        VBox root = new VBox(10, formPane, buttonBox, psicologoTable);
-        root.setPadding(new Insets(10));
-
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 950, 600);
         setScene(scene);
-
-        // Listener para preencher os campos quando uma linha da tabela é selecionada
-        psicologoTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                idField.setText(String.valueOf(newSelection.getId()));
-                nomeField.setText(newSelection.getNome());
-                crpField.setText(newSelection.getCrp());
-                especialidadeField.setText(newSelection.getEspecialidade());
-                telefoneField.setText(newSelection.getTelefone());
-                emailField.setText(newSelection.getEmail());
-            }
-        });
     }
 
-    // Getters para os campos e botões (para o Controller)
-    public TextField getIdField() {
-        return idField;
+    private String fieldStyle() {
+        return "-fx-background-color: white; -fx-border-color: #DDD; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 4;";
     }
 
-    public TextField getNomeField() {
-        return nomeField;
+    private void styleButton(Button btn, String color) {
+        btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        btn.setTextFill(Color.WHITE);
+        btn.setBackground(new Background(new BackgroundFill(Color.web(color), new CornerRadii(4), Insets.EMPTY)));
+        btn.setPadding(new Insets(6, 12, 6, 12));
     }
 
-    public TextField getCrpField() {
-        return crpField;
-    }
-
-    public TextField getEspecialidadeField() {
-        return especialidadeField;
-    }
-
-    public TextField getTelefoneField() {
-        return telefoneField;
-    }
-
-    public TextField getEmailField() {
-        return emailField;
-    }
-
-    public Button getAddButton() {
-        return addButton;
-    }
-
-    public Button getUpdateButton() {
-        return updateButton;
-    }
-
-    public Button getDeleteButton() {
-        return deleteButton;
-    }
-
-    public Button getClearButton() {
-        return clearButton;
-    }
-
-    public TableView<Psicologo> getPsicologoTable() {
-        return psicologoTable;
-    }
+    // Getters para controller
+    public TableView<Psicologo> getPsicologoTable() { return psicologoTable; }
+    public TextField getIdField() { return idField; }
+    public TextField getNomeField() { return nomeField; }
+    public TextField getCrpField() { return crpField; }
+    public TextField getEspecialidadeField() { return especialidadeField; }
+    public TextField getTelefoneField() { return telefoneField; }
+    public TextField getEmailField() { return emailField; }
+    public Button getAddButton() { return addButton; }
+    public Button getUpdateButton() { return updateButton; }
+    public Button getDeleteButton() { return deleteButton; }
+    public Button getClearButton() { return clearButton; }
 
     public void clearFields() {
-        idField.clear();
-        nomeField.clear();
-        crpField.clear();
-        especialidadeField.clear();
-        telefoneField.clear();
-        emailField.clear();
+        idField.clear(); nomeField.clear(); crpField.clear(); especialidadeField.clear(); telefoneField.clear(); emailField.clear();
+        psicologoTable.getSelectionModel().clearSelection();
     }
 
-    public void showAlert(String title, String message) {
+    public void showAlert(String title, String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.setContentText(msg);
         alert.showAndWait();
     }
 }
-
