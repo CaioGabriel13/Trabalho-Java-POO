@@ -11,5 +11,14 @@
     <orderEntry type="library" name="andrewlalis.javafx.scene.router" level="project" />
     <orderEntry type="library" name="controlsfx" level="project" />
     <orderEntry type="library" name="javafx-swt" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../Downloads/json-20230227.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
