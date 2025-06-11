@@ -5,9 +5,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
@@ -15,179 +16,173 @@ import java.time.format.DateTimeFormatter;
 
 public class PacienteView extends Stage {
 
+    private TableView<Paciente> pacienteTable;
     private TextField idField;
     private TextField nomeField;
     private TextField cpfField;
     private DatePicker dataNascimentoPicker;
     private TextField telefoneField;
     private TextField emailField;
-    private TextField enderecoField;
+    private TextArea enderecoArea;
     private Button addButton;
     private Button updateButton;
     private Button deleteButton;
     private Button clearButton;
-    private TableView<Paciente> pacienteTable;
 
     public PacienteView() {
-        setTitle("Gerenciar Pacientes");
+        setTitle("Gerenciador de Pacientes");
 
-        GridPane formPane = new GridPane();
-        formPane.setPadding(new Insets(10));
-        formPane.setHgap(10);
-        formPane.setVgap(10);
-
-        idField = new TextField();
-        idField.setPromptText("ID (para busca/edição/exclusão)");
-        idField.setDisable(true); // ID será gerado automaticamente ou preenchido na seleção
-
-        nomeField = new TextField();
-        nomeField.setPromptText("Nome");
-
-        cpfField = new TextField();
-        cpfField.setPromptText("CPF");
-
-        dataNascimentoPicker = new DatePicker();
-        dataNascimentoPicker.setPromptText("Data de Nascimento");
-
-        telefoneField = new TextField();
-        telefoneField.setPromptText("Telefone");
-
-        emailField = new TextField();
-        emailField.setPromptText("Email");
-
-        enderecoField = new TextField();
-        enderecoField.setPromptText("Endereço");
-
-        formPane.addRow(0, new Label("ID:"), idField);
-        formPane.addRow(1, new Label("Nome:"), nomeField);
-        formPane.addRow(2, new Label("CPF:"), cpfField);
-        formPane.addRow(3, new Label("Data Nasc.:"), dataNascimentoPicker);
-        formPane.addRow(4, new Label("Telefone:"), telefoneField);
-        formPane.addRow(5, new Label("Email:"), emailField);
-        formPane.addRow(6, new Label("Endereço:"), enderecoField);
-
-        addButton = new Button("Adicionar");
-        updateButton = new Button("Atualizar");
-        deleteButton = new Button("Excluir");
-        clearButton = new Button("Limpar Campos");
-
-        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton, clearButton);
-        buttonBox.setPadding(new Insets(10, 0, 10, 0));
-
+        // --- Tabela de pacientes (apenas ID e Nome) ---
         pacienteTable = new TableView<>();
+        pacienteTable.setPrefWidth(300);
+        pacienteTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         TableColumn<Paciente, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
 
         TableColumn<Paciente, String> nomeColumn = new TableColumn<>("Nome");
         nomeColumn.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        TableColumn<Paciente, String> cpfColumn = new TableColumn<>("CPF");
-        cpfColumn.setCellValueFactory(new PropertyValueFactory<>("cpf"));
+        pacienteTable.getColumns().addAll(idColumn, nomeColumn);
 
-        TableColumn<Paciente, LocalDate> dataNascimentoColumn = new TableColumn<>("Data Nasc.");
-        dataNascimentoColumn.setCellValueFactory(new PropertyValueFactory<>("dataNascimento"));
-        dataNascimentoColumn.setCellFactory(column -> new TableCell<Paciente, LocalDate>() {
-            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-            @Override
-            protected void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(formatter.format(item));
+        // Evento de duplo-clique para ver detalhes
+        pacienteTable.setRowFactory(tv -> {
+            TableRow<Paciente> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    Paciente p = row.getItem();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Detalhes do Paciente");
+                    alert.setHeaderText(p.getNome());
+                    String content = String.format(
+                            "ID: %d\n" +
+                                    "CPF: %s\n" +
+                                    "Nascimento: %s\n" +
+                                    "Telefone: %s\n" +
+                                    "Email: %s\n" +
+                                    "Endereço: %s",
+                            p.getId(),
+                            p.getCpf(),
+                            p.getDataNascimento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            p.getTelefone(),
+                            p.getEmail(),
+                            p.getEndereco()
+                    );
+                    alert.setContentText(content);
+                    alert.showAndWait();
                 }
-            }
+            });
+            return row;
         });
 
-        TableColumn<Paciente, String> telefoneColumn = new TableColumn<>("Telefone");
-        telefoneColumn.setCellValueFactory(new PropertyValueFactory<>("telefone"));
+        // --- Formulário de detalhes ---
+        GridPane formPane = new GridPane();
+        formPane.setHgap(10);
+        formPane.setVgap(10);
+        formPane.setPadding(new Insets(10));
+        formPane.setBackground(new Background(new BackgroundFill(Color.WHITE, new CornerRadii(4), Insets.EMPTY)));
 
-        TableColumn<Paciente, String> emailColumn = new TableColumn<>("Email");
-        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+        idField = new TextField();
+        idField.setPromptText("ID");
+        idField.setDisable(true);
+        idField.setStyle(fieldStyle());
 
-        TableColumn<Paciente, String> enderecoColumn = new TableColumn<>("Endereço");
-        enderecoColumn.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        nomeField = new TextField();
+        nomeField.setPromptText("Nome");
+        nomeField.setStyle(fieldStyle());
 
-        pacienteTable.getColumns().addAll(idColumn, nomeColumn, cpfColumn, dataNascimentoColumn, telefoneColumn, emailColumn, enderecoColumn);
+        cpfField = new TextField();
+        cpfField.setPromptText("CPF");
+        cpfField.setStyle(fieldStyle());
 
-        VBox root = new VBox(10, formPane, buttonBox, pacienteTable);
-        root.setPadding(new Insets(10));
+        dataNascimentoPicker = new DatePicker();
+        dataNascimentoPicker.setPromptText("Nascimento");
+        dataNascimentoPicker.setStyle(fieldStyle());
 
-        Scene scene = new Scene(root, 800, 600);
+        telefoneField = new TextField();
+        telefoneField.setPromptText("Telefone");
+        telefoneField.setStyle(fieldStyle());
+
+        emailField = new TextField();
+        emailField.setPromptText("Email");
+        emailField.setStyle(fieldStyle());
+
+        enderecoArea = new TextArea();
+        enderecoArea.setPromptText("Endereço");
+        enderecoArea.setWrapText(true);
+        enderecoArea.setPrefRowCount(3);
+        enderecoArea.setStyle(fieldStyle());
+
+        formPane.addRow(0, new Label("ID:"), idField);
+        formPane.addRow(1, new Label("Nome:"), nomeField);
+        formPane.addRow(2, new Label("CPF:"), cpfField);
+        formPane.addRow(3, new Label("Nascimento:"), dataNascimentoPicker);
+        formPane.addRow(4, new Label("Telefone:"), telefoneField);
+        formPane.addRow(5, new Label("Email:"), emailField);
+        formPane.addRow(6, new Label("Endereço:"), enderecoArea);
+
+        // --- Botões de ação ---
+        addButton = new Button("Adicionar");
+        updateButton = new Button("Atualizar");
+        deleteButton = new Button("Excluir");
+        clearButton = new Button("Limpar");
+        styleButton(addButton, "#007ACC");
+        styleButton(updateButton, "#007ACC");
+        styleButton(deleteButton, "#E53935");
+        styleButton(clearButton, "#777777");
+
+        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton, clearButton);
+        buttonBox.setPadding(new Insets(10));
+        buttonBox.setBackground(new Background(new BackgroundFill(Color.web("#EFEFEF"), new CornerRadii(4), Insets.EMPTY)));
+
+        // --- Layout principal ---
+        BorderPane root = new BorderPane();
+        root.setLeft(pacienteTable);
+        root.setCenter(formPane);
+        root.setBottom(buttonBox);
+        root.setPadding(new Insets(12));
+        root.setBackground(new Background(new BackgroundFill(Color.web("#F5F5F5"), CornerRadii.EMPTY, Insets.EMPTY)));
+
+        Scene scene = new Scene(root, 900, 600);
         setScene(scene);
-
-        // Listener para preencher os campos quando uma linha da tabela é selecionada
-        pacienteTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                idField.setText(String.valueOf(newSelection.getId()));
-                nomeField.setText(newSelection.getNome());
-                cpfField.setText(newSelection.getCpf());
-                dataNascimentoPicker.setValue(newSelection.getDataNascimento());
-                telefoneField.setText(newSelection.getTelefone());
-                emailField.setText(newSelection.getEmail());
-                enderecoField.setText(newSelection.getEndereco());
-            }
-        });
     }
 
-    // Getters para os campos e botões (para o Controller)
-    public TextField getIdField() {
-        return idField;
+    // Estilo para campos
+    private String fieldStyle() {
+        return "-fx-background-color: white; " +
+                "-fx-border-color: #DDD; " +
+                "-fx-border-radius: 4; " +
+                "-fx-background-radius: 4; " +
+                "-fx-padding: 4;";
     }
 
-    public TextField getNomeField() {
-        return nomeField;
+    // Estilo para botões
+    private void styleButton(Button btn, String color) {
+        btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        btn.setTextFill(Color.WHITE);
+        btn.setBackground(new Background(new BackgroundFill(Color.web(color), new CornerRadii(4), Insets.EMPTY)));
+        btn.setPadding(new Insets(6, 12, 6, 12));
     }
 
-    public TextField getCpfField() {
-        return cpfField;
-    }
+    // Getters para o controller
+    public TableView<Paciente> getPacienteTable() { return pacienteTable; }
+    public TextField getIdField() { return idField; }
+    public TextField getNomeField() { return nomeField; }
+    public TextField getCpfField() { return cpfField; }
+    public DatePicker getDataNascimentoPicker() { return dataNascimentoPicker; }
+    public TextField getTelefoneField() { return telefoneField; }
+    public TextField getEmailField() { return emailField; }
+    public TextArea getEnderecoArea() { return enderecoArea; }
+    public Button getAddButton() { return addButton; }
+    public Button getUpdateButton() { return updateButton; }
+    public Button getDeleteButton() { return deleteButton; }
+    public Button getClearButton() { return clearButton; }
 
-    public DatePicker getDataNascimentoPicker() {
-        return dataNascimentoPicker;
-    }
-
-    public TextField getTelefoneField() {
-        return telefoneField;
-    }
-
-    public TextField getEmailField() {
-        return emailField;
-    }
-
-    public TextField getEnderecoField() {
-        return enderecoField;
-    }
-
-    public Button getAddButton() {
-        return addButton;
-    }
-
-    public Button getUpdateButton() {
-        return updateButton;
-    }
-
-    public Button getDeleteButton() {
-        return deleteButton;
-    }
-
-    public Button getClearButton() {
-        return clearButton;
-    }
-
-    public TableView<Paciente> getPacienteTable() {
-        return pacienteTable;
-    }
-
+    // Métodos auxiliares
     public void clearFields() {
-        idField.clear();
-        nomeField.clear();
-        cpfField.clear();
-        dataNascimentoPicker.setValue(null);
-        telefoneField.clear();
-        emailField.clear();
-        enderecoField.clear();
+        idField.clear(); nomeField.clear(); cpfField.clear(); dataNascimentoPicker.setValue(null);
+        telefoneField.clear(); emailField.clear(); enderecoArea.clear();
+        pacienteTable.getSelectionModel().clearSelection();
     }
 
     public void showAlert(String title, String message) {
@@ -198,4 +193,3 @@ public class PacienteView extends Stage {
         alert.showAndWait();
     }
 }
-
